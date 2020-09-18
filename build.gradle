@@ -26,6 +26,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven { url 'https://jitpack.io' }
     }
     apply plugin: "com.diffplug.gradle.spotless"
     spotless {
@@ -54,6 +55,7 @@ ext {
     rxJavaVersion = "3.0.6"
     rxKotlinVersion = "3.0.0"
     rxAndroidVersion = "3.0.0"
+    rxPermissions = "0.12"
 
     hiltAndroidXVersion = "1.0.0-alpha02"
 
