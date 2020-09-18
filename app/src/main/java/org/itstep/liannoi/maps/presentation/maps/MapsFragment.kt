@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
 import org.itstep.liannoi.maps.R
 import org.itstep.liannoi.maps.application.common.interfaces.MapClient
@@ -64,7 +65,7 @@ class MapsFragment : Fragment() {
             DefaultMapClient(childFragmentManager.findFragmentById(R.id.maps_fragment) as SupportMapFragment)
 
         mapClient.request(FineLocationNotificationHandler())
-        mapClient.prepare()
+        mapClient.prepare(MapClickNotificationHandler())
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -75,6 +76,13 @@ class MapsFragment : Fragment() {
 
         override fun onSuccess(isGranted: Boolean) {
             Log.d("FineLocationNotificationHandler: ", isGranted.toString())
+        }
+    }
+
+    private inner class MapClickNotificationHandler : MapClient.MapClickNotification {
+
+        override fun onClick(latLng: LatLng) {
+            mapClient.marker(latLng)
         }
     }
 }

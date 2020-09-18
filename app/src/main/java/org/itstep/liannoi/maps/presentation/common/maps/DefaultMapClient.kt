@@ -2,7 +2,10 @@ package org.itstep.liannoi.maps.presentation.common.maps
 
 import android.Manifest
 import android.annotation.SuppressLint
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.tbruyelle.rxpermissions3.RxPermissions
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -13,6 +16,7 @@ class DefaultMapClient constructor(
 ) : MapClient {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
+    private lateinit var map: GoogleMap
 
     override fun request(notification: MapClient.FineLocationNotification) {
         RxPermissions(fragment).request(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -20,9 +24,16 @@ class DefaultMapClient constructor(
             .addTo(disposable)
     }
 
-    @SuppressLint("MissingPermission")
-    override fun prepare() {
-        fragment.getMapAsync { it.isMyLocationEnabled = true }
+    override fun prepare(notification: MapClient.MapClickNotification) {
+        fragment.getMapAsync {
+            initialize(it)
+            setup()
+            subscribe(notification)
+        }
+    }
+
+    override fun marker(latLng: LatLng) {
+        map.addMarker(MarkerOptions().position(latLng))
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -35,5 +46,22 @@ class DefaultMapClient constructor(
 
     override fun destroy() {
         disposable.dispose()
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Helpers
+    ///////////////////////////////////////////////////////////////////////////
+
+    private fun initialize(map: GoogleMap) {
+        this.map = map
+    }
+
+    private fun subscribe(notification: MapClient.MapClickNotification) {
+        map.setOnMapClickListener { notification.onClick(it) }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun setup() {
+        map.isMyLocationEnabled = true
     }
 }
