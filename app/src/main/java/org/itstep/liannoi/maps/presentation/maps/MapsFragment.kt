@@ -1,5 +1,7 @@
 package org.itstep.liannoi.maps.presentation.maps
 
+import android.content.Context
+import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,11 +11,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.tbruyelle.rxpermissions3.RxPermissions
 import dagger.hilt.android.AndroidEntryPoint
 import org.itstep.liannoi.maps.R
-import org.itstep.liannoi.maps.application.common.interfaces.MapClient
+import org.itstep.liannoi.maps.application.common.maps.LocationProvider
+import org.itstep.liannoi.maps.application.common.maps.MapClient
 import org.itstep.liannoi.maps.databinding.FragmentMapsBinding
-import org.itstep.liannoi.maps.presentation.common.maps.DefaultMapClient
+import org.itstep.liannoi.maps.infrastructure.maps.DefaultLocationProvider
+import org.itstep.liannoi.maps.infrastructure.maps.DefaultMapClient
+import org.itstep.liannoi.maps.infrastructure.maps.DefaultRoulette
 
 @AndroidEntryPoint
 class MapsFragment : Fragment() {
@@ -61,8 +67,16 @@ class MapsFragment : Fragment() {
     ///////////////////////////////////////////////////////////////////////////
 
     private fun setupMap() {
-        mapClient =
-            DefaultMapClient(childFragmentManager.findFragmentById(R.id.maps_fragment) as SupportMapFragment)
+        val locationProvider: LocationProvider = DefaultLocationProvider(
+            RxPermissions(this),
+            requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        )
+
+        mapClient = DefaultMapClient(
+            childFragmentManager.findFragmentById(R.id.maps_fragment) as SupportMapFragment,
+            locationProvider,
+            DefaultRoulette(locationProvider)
+        )
 
         mapClient.request(FineLocationNotificationHandler())
         mapClient.prepare(MapClickNotificationHandler())
@@ -72,7 +86,7 @@ class MapsFragment : Fragment() {
     // Internal members
     ///////////////////////////////////////////////////////////////////////////
 
-    private class FineLocationNotificationHandler : MapClient.FineLocationNotification {
+    private class FineLocationNotificationHandler : LocationProvider.FineLocationNotification {
 
         override fun onSuccess(isGranted: Boolean) {
             Log.d("FineLocationNotificationHandler: ", isGranted.toString())
@@ -83,6 +97,9 @@ class MapsFragment : Fragment() {
 
         override fun onClick(latLng: LatLng) {
             mapClient.marker(latLng)
+            mapClient.commit(latLng)
+            val metres: Double = mapClient.measure()
+            Log.d("Measure: ", metres.toString())
         }
     }
 }
