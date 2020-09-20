@@ -49,10 +49,7 @@ class DefaultRoulette constructor(
 
     private fun measure(coordinates: List<LatLng>): Double {
         var result = 0.0
-
-        for (i: Int in 0 until coordinates.size - 1) {
-            result += measure(coordinates[i], coordinates[i + 1])
-        }
+        coordinates.indices.forEach { result += measure(coordinates[it], coordinates[it + 1]) }
 
         return result
     }

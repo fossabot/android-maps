@@ -3,14 +3,13 @@ package org.itstep.liannoi.maps.presentation.maps
 import android.content.Context
 import android.location.LocationManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
 import com.tbruyelle.rxpermissions3.RxPermissions
 import dagger.hilt.android.AndroidEntryPoint
 import org.itstep.liannoi.maps.R
@@ -20,13 +19,13 @@ import org.itstep.liannoi.maps.databinding.FragmentMapsBinding
 import org.itstep.liannoi.maps.infrastructure.maps.DefaultLocationProvider
 import org.itstep.liannoi.maps.infrastructure.maps.DefaultMapClient
 import org.itstep.liannoi.maps.infrastructure.maps.DefaultRoulette
+import org.itstep.liannoi.maps.presentation.common.EventObserver
 
 @AndroidEntryPoint
 class MapsFragment : Fragment() {
 
     private val viewModel: MapsViewModel by viewModels()
     private lateinit var viewDataBinding: FragmentMapsBinding
-    private lateinit var mapClient: MapClient
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,57 +48,25 @@ class MapsFragment : Fragment() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Dispose
-    ///////////////////////////////////////////////////////////////////////////
-
-    override fun onStop() {
-        super.onStop()
-        mapClient.stop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapClient.destroy()
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     // Helpers
     ///////////////////////////////////////////////////////////////////////////
 
     private fun setupMap() {
-        val locationProvider: LocationProvider = DefaultLocationProvider(
-            RxPermissions(this),
-            requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        )
+        viewModel.setupMap(provideMapClient(provideLocationProvider()))
 
-        mapClient = DefaultMapClient(
-            childFragmentManager.findFragmentById(R.id.maps_fragment) as SupportMapFragment,
-            locationProvider,
-            DefaultRoulette(locationProvider)
-        )
-
-        mapClient.request(FineLocationNotificationHandler())
-        mapClient.prepare(MapClickNotificationHandler())
+        viewModel.measuredEvent.observe(viewLifecycleOwner, EventObserver {
+            Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+        })
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Internal members
-    ///////////////////////////////////////////////////////////////////////////
+    private fun provideMapClient(locationProvider: LocationProvider): MapClient = DefaultMapClient(
+        childFragmentManager.findFragmentById(R.id.maps_fragment) as SupportMapFragment,
+        locationProvider,
+        DefaultRoulette(locationProvider)
+    )
 
-    private class FineLocationNotificationHandler : LocationProvider.FineLocationNotification {
-
-        override fun onSuccess(isGranted: Boolean) {
-            Log.d("FineLocationNotificationHandler: ", isGranted.toString())
-        }
-    }
-
-    private inner class MapClickNotificationHandler : MapClient.MapClickNotification {
-
-        override fun onClick(latLng: LatLng) {
-            mapClient.marker(latLng)
-            mapClient.commit(latLng)
-            val metres: Double = mapClient.measure()
-            Log.d("Measure: ", metres.toString())
-        }
-    }
+    private fun provideLocationProvider(): LocationProvider = DefaultLocationProvider(
+        RxPermissions(this),
+        requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    )
 }
