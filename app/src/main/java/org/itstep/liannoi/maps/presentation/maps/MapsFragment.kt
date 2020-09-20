@@ -55,7 +55,7 @@ class MapsFragment : Fragment() {
         viewModel.setupMap(provideMapClient(provideLocationProvider()))
 
         viewModel.measuredEvent.observe(viewLifecycleOwner, EventObserver {
-            Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
         })
     }
 

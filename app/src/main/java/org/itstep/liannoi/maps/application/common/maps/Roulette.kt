@@ -4,7 +4,7 @@ import com.google.android.gms.maps.model.LatLng
 
 interface Roulette {
 
-    fun commit(latLng: LatLng)
+    fun commit(latLng: LatLng): List<LatLng>
 
     fun measure(): Double
 }

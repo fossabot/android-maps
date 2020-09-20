@@ -40,8 +40,18 @@ class MapsViewModel : ViewModel() {
 
         override fun onClick(latLng: LatLng) {
             mapClient.marker(latLng)
-            mapClient.commit(latLng)
-            _measuredEvent.value = Event("${mapClient.measure().toInt()} (m.)")
+            mapClient.markedCommit(latLng)
+            notifyClient()
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+        // Helpers
+        ///////////////////////////////////////////////////////////////////////////
+
+        private fun notifyClient() {
+            val content = "${mapClient.measure().toInt()} (m.)"
+            Log.d(TAG, "MapClickNotificationHandler: $content")
+            _measuredEvent.value = Event(content)
         }
     }
 
@@ -50,5 +60,14 @@ class MapsViewModel : ViewModel() {
         override fun onSuccess(isGranted: Boolean) {
             Log.d("FineLocationNotificationHandler: ", isGranted.toString())
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Companion object
+    ///////////////////////////////////////////////////////////////////////////
+
+    companion object {
+
+        private val TAG: String = MapsViewModel::class.simpleName!!
     }
 }

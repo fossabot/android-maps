@@ -14,12 +14,14 @@ class DefaultRoulette constructor(
 
     private val coordinates: MutableList<LatLng> = mutableListOf()
 
-    override fun commit(latLng: LatLng) {
+    override fun commit(latLng: LatLng): List<LatLng> {
         if (coordinates.size < 2) {
             coordinates.add(0, locationProvider.current())
         }
 
         coordinates.add(latLng)
+
+        return coordinates.takeLast(2)
     }
 
     override fun measure(): Double = measure(coordinates)
@@ -49,7 +51,10 @@ class DefaultRoulette constructor(
 
     private fun measure(coordinates: List<LatLng>): Double {
         var result = 0.0
-        coordinates.indices.forEach { result += measure(coordinates[it], coordinates[it + 1]) }
+
+        (0 until coordinates.size - 1).forEach {
+            result += measure(coordinates[it], coordinates[it + 1])
+        }
 
         return result
     }
